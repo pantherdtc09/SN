@@ -28,13 +28,15 @@ fi
 # check and claim all reward
 
 REWARDS=$(nibid query distribution rewards $ADDR | grep amount | tr -dc '[. [:digit:]]' | awk '{print $NF}')
-NIBI_REWARDS=$(awk '{print $1*$2}' <<<"${REWARDS} ${UN}")
-
-if [[ $NIBI_REWARDS -gt 1000 ]]
+NIBI_REWARDS=$(awk '{print $1/$2}' <<<"${REWARDS} ${UN}")
+#INT_RW=${NIBI_REWARDS%.*}
+#if [[ $INT_RW -gt 1000 ]]
+if (( $(echo "$NIBI_REWARDS > $UN" |bc -l) ))
 then
-
         echo $PASS | nibid tx distribution withdraw-all-rewards --broadcast-mode=block --from=wallet --chain-id=nibiru-itn-1 --gas=200000 --fees=80000unibi --yes
-        sleep $TI
+            
+        echo " claimed $NIBI_REWARDS NIBI "
+        sleep $TI 
 
 fi
 
@@ -46,8 +48,8 @@ NIBI_BAL=$(( $UNIBI_BAL / $UN ))
 AMOUNT=$(( $UNIBI_BAL - $GAS ))
 
 
-if [[ $AMOUNT -gt 100 ]]
-then
-        echo $PASS | nibid tx staking delegate $VALADDR ${AMOUNT}unibi --from=wallet --chain-id=nibiru-itn-1 --fees=9000unibi --yes
-fi
+if [[ $AMOUNT -gt 100 ]]then        echo $PASS | nibid tx staking delegate $VALADDR ${AMOUNT}unibi --from=wallet --chain-id=nibiru-itn-1 --fees=9000unibi --yes
+
+        echo "delegate $AMOUNT to $VALADDR"
+                                     
 
